@@ -1,22 +1,32 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: GURU HOST API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: users
+    description: User management
+  - name: deployments
+    description: Bot deployment management
+  - name: bots
+    description: Bot catalog management
+  - name: payments
+    description: Payment and credits management
+  - name: admin
+    description: Admin operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +34,526 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "200":
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid input or email already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user
+      responses:
+        "200":
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /deployments:
+    get:
+      operationId: getDeployments
+      tags: [deployments]
+      summary: Get all deployments for current user
+      responses:
+        "200":
+          description: List of deployments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Deployment"
+    post:
+      operationId: createDeployment
+      tags: [deployments]
+      summary: Create a new bot deployment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDeploymentRequest"
+      responses:
+        "200":
+          description: Deployment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deployment"
+        "402":
+          description: Insufficient credits
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /deployments/{id}:
+    get:
+      operationId: getDeployment
+      tags: [deployments]
+      summary: Get a deployment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deployment details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deployment"
+    delete:
+      operationId: deleteDeployment
+      tags: [deployments]
+      summary: Delete a deployment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /deployments/{id}/restart:
+    post:
+      operationId: restartDeployment
+      tags: [deployments]
+      summary: Restart a deployment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Restarted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deployment"
+
+  /deployments/{id}/pause:
+    post:
+      operationId: pauseDeployment
+      tags: [deployments]
+      summary: Pause/stop a deployment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deployment"
+
+  /deployments/{id}/resume:
+    post:
+      operationId: resumeDeployment
+      tags: [deployments]
+      summary: Resume a paused deployment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Resumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deployment"
+
+  /deployments/{id}/logs:
+    get:
+      operationId: getDeploymentLogs
+      tags: [deployments]
+      summary: Get logs for a deployment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: lines
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Logs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LogsResponse"
+
+  /deployments/{id}/env:
+    get:
+      operationId: getDeploymentEnv
+      tags: [deployments]
+      summary: Get env vars for a deployment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Env vars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EnvVar"
+    post:
+      operationId: setDeploymentEnv
+      tags: [deployments]
+      summary: Set env vars for a deployment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                vars:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/EnvVar"
+              required: [vars]
+      responses:
+        "200":
+          description: Env vars updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /bots:
+    get:
+      operationId: getBots
+      tags: [bots]
+      summary: Get available bots in catalog
+      responses:
+        "200":
+          description: Bot catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Bot"
+
+  /payments/submit:
+    post:
+      operationId: submitPayment
+      tags: [payments]
+      summary: Submit a payment request with screenshot
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmitPaymentRequest"
+      responses:
+        "200":
+          description: Payment submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentRequest"
+
+  /payments/history:
+    get:
+      operationId: getPaymentHistory
+      tags: [payments]
+      summary: Get payment history for current user
+      responses:
+        "200":
+          description: Payment history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentRequest"
+
+  /admin/login:
+    post:
+      operationId: adminLogin
+      tags: [admin]
+      summary: Admin login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminLoginRequest"
+      responses:
+        "200":
+          description: Admin login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/users:
+    get:
+      operationId: adminGetUsers
+      tags: [admin]
+      summary: Admin - get all users
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+
+  /admin/users/{id}/fund:
+    post:
+      operationId: adminFundUser
+      tags: [admin]
+      summary: Admin - fund a user's account
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FundUserRequest"
+      responses:
+        "200":
+          description: User funded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /admin/payments:
+    get:
+      operationId: adminGetPayments
+      tags: [admin]
+      summary: Admin - get all payment requests
+      responses:
+        "200":
+          description: All payment requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PaymentRequest"
+
+  /admin/payments/{id}/approve:
+    post:
+      operationId: adminApprovePayment
+      tags: [admin]
+      summary: Admin - approve a payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Payment approved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentRequest"
+
+  /admin/payments/{id}/reject:
+    post:
+      operationId: adminRejectPayment
+      tags: [admin]
+      summary: Admin - reject a payment
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Payment rejected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentRequest"
+
+  /admin/deployments:
+    get:
+      operationId: adminGetDeployments
+      tags: [admin]
+      summary: Admin - get all deployments
+      responses:
+        "200":
+          description: All deployments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Deployment"
+
+  /admin/bots:
+    post:
+      operationId: adminCreateBot
+      tags: [admin]
+      summary: Admin - add a new bot to catalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBotRequest"
+      responses:
+        "200":
+          description: Bot created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Bot"
+
+  /admin/bots/{id}:
+    delete:
+      operationId: adminDeleteBot
+      tags: [admin]
+      summary: Admin - delete a bot from catalog
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Bot deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /admin/stats:
+    get:
+      operationId: adminGetStats
+      tags: [admin]
+      summary: Admin - get platform statistics
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformStats"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +561,261 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success]
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        name:
+          type: string
+        country:
+          type: string
+        currency:
+          type: string
+        herokuApiKey:
+          type: string
+        herokuTeam:
+          type: string
+      required: [email, password, name, country, currency, herokuApiKey]
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required: [email, password]
+
+    AdminLoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        token:
+          type: string
+      required: [user, token]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: number
+        email:
+          type: string
+        name:
+          type: string
+        country:
+          type: string
+        currency:
+          type: string
+        gruCredits:
+          type: number
+        freeDeploymentUsed:
+          type: boolean
+        herokuApiType:
+          type: string
+        isAdmin:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, email, name, country, currency, gruCredits, freeDeploymentUsed, herokuApiType, isAdmin, createdAt]
+
+    Deployment:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: number
+        botId:
+          type: number
+        appName:
+          type: string
+        repoUrl:
+          type: string
+        sessionId:
+          type: string
+        status:
+          type: string
+          enum: [building, running, paused, crashed, deleted]
+        herokuAppId:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        bot:
+          $ref: "#/components/schemas/Bot"
+      required: [id, userId, botId, appName, repoUrl, sessionId, status, createdAt, updatedAt]
+
+    CreateDeploymentRequest:
+      type: object
+      properties:
+        botId:
+          type: number
+        repoUrl:
+          type: string
+        sessionId:
+          type: string
+        envVars:
+          type: array
+          items:
+            $ref: "#/components/schemas/EnvVar"
+      required: [botId, repoUrl, sessionId]
+
+    EnvVar:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+      required: [key, value]
+
+    LogsResponse:
+      type: object
+      properties:
+        logs:
+          type: string
+        lines:
+          type: array
+          items:
+            type: string
+      required: [logs, lines]
+
+    Bot:
+      type: object
+      properties:
+        id:
+          type: number
+        name:
+          type: string
+        description:
+          type: string
+        repoUrl:
+          type: string
+        imageUrl:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, name, description, repoUrl, isActive, createdAt]
+
+    CreateBotRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        repoUrl:
+          type: string
+        imageUrl:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+      required: [name, description, repoUrl]
+
+    SubmitPaymentRequest:
+      type: object
+      properties:
+        screenshotBase64:
+          type: string
+        screenshotMimeType:
+          type: string
+        amount:
+          type: number
+        phoneNumber:
+          type: string
+        notes:
+          type: string
+      required: [screenshotBase64, screenshotMimeType, amount]
+
+    PaymentRequest:
+      type: object
+      properties:
+        id:
+          type: number
+        userId:
+          type: number
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        screenshotUrl:
+          type: string
+        phoneNumber:
+          type: string
+        notes:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required: [id, userId, amount, status, screenshotUrl, createdAt, updatedAt]
+
+    FundUserRequest:
+      type: object
+      properties:
+        amount:
+          type: number
+        note:
+          type: string
+      required: [amount]
+
+    PlatformStats:
+      type: object
+      properties:
+        totalUsers:
+          type: number
+        totalDeployments:
+          type: number
+        activeDeployments:
+          type: number
+        pendingPayments:
+          type: number
+        totalRevenue:
+          type: number
+        botsInCatalog:
+          type: number
+      required: [totalUsers, totalDeployments, activeDeployments, pendingPayments, totalRevenue, botsInCatalog]
