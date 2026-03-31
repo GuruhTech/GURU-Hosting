@@ -61,58 +61,59 @@
 }
 
 :root, .dark {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
+  --button-outline: rgba(255, 220, 180, 0.10);
+  --badge-outline: rgba(255, 220, 180, 0.06);
 
   --opaque-button-border-intensity: 9;
 
-  --elevate-1: rgba(255,255,255, .04);
-  --elevate-2: rgba(255,255,255, .09);
+  --elevate-1: rgba(255, 200, 150, 0.04);
+  --elevate-2: rgba(255, 200, 150, 0.09);
 
-  /* Dark, deep purple/navy base */
-  --background: 226 47% 7%;
-  --foreground: 210 40% 98%;
-  --border: 226 30% 15%;
-  --input: 226 30% 15%;
-  --ring: 142 70% 50%;
+  /* Deep warm brown-black base */
+  --background: 20 40% 4%;
+  --foreground: 30 15% 94%;
+  --border: 25 25% 18%;
+  --input: 22 28% 12%;
+  --ring: 33 75% 55%;
 
-  --card: 226 40% 10%;
-  --card-foreground: 210 40% 98%;
-  --card-border: 226 30% 15%;
+  /* Cards intentionally slightly warm brown — glass effect applied below */
+  --card: 22 30% 8%;
+  --card-foreground: 30 15% 94%;
+  --card-border: 25 25% 18%;
 
-  --sidebar: 226 47% 6%;
-  --sidebar-foreground: 210 40% 98%;
-  --sidebar-border: 226 30% 15%;
-  --sidebar-primary: 142 70% 50%;
-  --sidebar-primary-foreground: 144 90% 10%;
-  --sidebar-accent: 226 30% 15%;
-  --sidebar-accent-foreground: 210 40% 98%;
-  --sidebar-ring: 142 70% 50%;
+  --sidebar: 20 40% 3%;
+  --sidebar-foreground: 30 15% 94%;
+  --sidebar-border: 25 25% 18%;
+  --sidebar-primary: 33 75% 55%;
+  --sidebar-primary-foreground: 25 60% 10%;
+  --sidebar-accent: 22 28% 12%;
+  --sidebar-accent-foreground: 30 15% 94%;
+  --sidebar-ring: 33 75% 55%;
 
-  --popover: 226 40% 10%;
-  --popover-foreground: 210 40% 98%;
-  --popover-border: 226 30% 15%;
+  --popover: 22 30% 7%;
+  --popover-foreground: 30 15% 94%;
+  --popover-border: 25 25% 18%;
 
-  /* Electric green primary */
-  --primary: 142 70% 50%;
-  --primary-foreground: 144 90% 10%;
+  /* Warm amber primary */
+  --primary: 33 75% 55%;
+  --primary-foreground: 25 60% 8%;
 
-  --secondary: 226 30% 15%;
-  --secondary-foreground: 210 40% 98%;
+  --secondary: 22 28% 14%;
+  --secondary-foreground: 30 15% 94%;
 
-  --muted: 226 30% 15%;
-  --muted-foreground: 215 20.2% 65.1%;
+  --muted: 22 25% 13%;
+  --muted-foreground: 28 12% 55%;
 
-  --accent: 226 30% 15%;
-  --accent-foreground: 210 40% 98%;
+  --accent: 22 28% 14%;
+  --accent-foreground: 30 15% 94%;
 
-  --destructive: 0 62.8% 30.6%;
+  --destructive: 0 60% 38%;
   --destructive-foreground: 0 0% 98%;
 
   --app-font-sans: 'Inter', sans-serif;
   --app-font-serif: Georgia, serif;
   --app-font-mono: 'Spline Sans Mono', Menlo, monospace;
-  --radius: .5rem;
+  --radius: .75rem;
 
   --sidebar-primary-border: hsl(var(--sidebar-primary));
   --sidebar-accent-border: hsl(var(--sidebar-accent));
@@ -129,8 +130,116 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    @apply font-sans antialiased text-foreground;
+    background: #0c0806;
+    background-image:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(120, 60, 15, 0.35) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(80, 35, 8, 0.25) 0%, transparent 55%),
+      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(50, 20, 5, 0.20) 0%, transparent 70%);
+    background-attachment: fixed;
+    min-height: 100vh;
   }
+}
+
+/* ─── Glass card effect ─────────────────────────────────── */
+@layer components {
+  /* Applies to every shadcn Card */
+  [class*="rounded-"] [data-slot="card"],
+  [data-slot="card"],
+  .card-glass {
+    background: rgba(35, 18, 8, 0.40) !important;
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgba(255, 200, 140, 0.10) !important;
+    box-shadow:
+      0 4px 32px rgba(0, 0, 0, 0.45),
+      0 1px 0 rgba(255, 200, 140, 0.08) inset;
+  }
+
+  /* Direct .card class fallback for any unstyled divs */
+  .card {
+    background: rgba(35, 18, 8, 0.40) !important;
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgba(255, 200, 140, 0.10) !important;
+    box-shadow:
+      0 4px 32px rgba(0, 0, 0, 0.45),
+      0 1px 0 rgba(255, 200, 140, 0.08) inset;
+  }
+
+  /* Dialog & popover glass */
+  [data-slot="dialog-content"],
+  [role="dialog"] > div,
+  [data-radix-popper-content-wrapper] [role="dialog"] {
+    background: rgba(28, 14, 5, 0.75) !important;
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid rgba(255, 200, 140, 0.12) !important;
+    box-shadow:
+      0 8px 48px rgba(0, 0, 0, 0.65),
+      0 1px 0 rgba(255, 200, 140, 0.10) inset;
+  }
+
+  /* Floating nav / header glass */
+  .glass-nav {
+    background: rgba(18, 9, 3, 0.72) !important;
+    backdrop-filter: blur(20px) saturate(130%);
+    -webkit-backdrop-filter: blur(20px) saturate(130%);
+    border-bottom: 1px solid rgba(255, 200, 140, 0.09) !important;
+  }
+
+  /* Table rows subtle tint */
+  tbody tr:nth-child(odd) {
+    background: rgba(255, 200, 140, 0.025);
+  }
+  tbody tr:hover {
+    background: rgba(255, 200, 140, 0.055) !important;
+  }
+
+  /* Inputs glass */
+  input, textarea, select,
+  [data-slot="input"], [data-slot="textarea"] {
+    background: rgba(20, 10, 3, 0.55) !important;
+    border-color: rgba(255, 200, 140, 0.14) !important;
+  }
+  input:focus, textarea:focus,
+  [data-slot="input"]:focus {
+    border-color: rgba(255, 180, 80, 0.45) !important;
+    box-shadow: 0 0 0 3px rgba(200, 120, 30, 0.15) !important;
+  }
+
+  /* Tabs */
+  [role="tablist"] {
+    background: rgba(25, 12, 4, 0.50) !important;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 200, 140, 0.09) !important;
+  }
+  [role="tab"][data-state="active"] {
+    background: rgba(180, 100, 30, 0.28) !important;
+    color: hsl(33 90% 75%) !important;
+    box-shadow: 0 0 12px rgba(180, 100, 30, 0.20);
+  }
+
+  /* Buttons */
+  [data-slot="button"][data-variant="outline"],
+  button[data-variant="outline"] {
+    background: rgba(255, 200, 140, 0.06) !important;
+    border-color: rgba(255, 200, 140, 0.18) !important;
+  }
+  [data-slot="button"][data-variant="outline"]:hover {
+    background: rgba(255, 200, 140, 0.12) !important;
+  }
+
+  /* Badge glass tint */
+  [data-slot="badge"] {
+    backdrop-filter: blur(4px);
+  }
+
+  /* Scrollbar warm style */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: rgba(15, 7, 2, 0.5); }
+  ::-webkit-scrollbar-thumb { background: rgba(180, 100, 30, 0.4); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(200, 130, 50, 0.6); }
 }
 
 @layer utilities {
@@ -141,5 +250,22 @@
     content: attr(data-placeholder);
     color: hsl(var(--muted-foreground));
     pointer-events: none;
+  }
+
+  /* Glow utility for primary elements */
+  .glow-amber {
+    box-shadow: 0 0 20px rgba(200, 120, 30, 0.35), 0 0 60px rgba(200, 120, 30, 0.12);
+  }
+  .glow-amber-sm {
+    box-shadow: 0 0 8px rgba(200, 120, 30, 0.30);
+  }
+
+  /* Floating card lift */
+  .float-card {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .float-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55), 0 2px 0 rgba(255, 200, 140, 0.12) inset;
   }
 }
