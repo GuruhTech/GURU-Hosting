@@ -17,22 +17,52 @@ function herokuHeaders(apiKey: string) {
 
 export async function detectApiType(apiKey: string): Promise<"personal" | "team"> {
   try {
-    const res = await fetch(`${HEROKU_API_BASE}/account`, {
-      headers: herokuHeaders(apiKey),
-    });
-    if (res.ok) {
+    // Check for teams first — both personal and team keys can access /account,
+    // but only accounts with team membership will list teams.
+    const [accountRes, teamsRes] = await Promise.all([
+      fetch(`${HEROKU_API_BASE}/account`, { headers: herokuHeaders(apiKey) }),
+      fetch(`${HEROKU_API_BASE}/teams`, { headers: herokuHeaders(apiKey) }),
+    ]);
+
+    if (teamsRes.ok) {
+      const teams = await teamsRes.json() as any[];
+      if (Array.isArray(teams) && teams.length > 0) {
+        return "team";
+      }
+    }
+
+    if (accountRes.ok) {
       return "personal";
     }
-    const teamRes = await fetch(`${HEROKU_API_BASE}/teams`, {
-      headers: herokuHeaders(apiKey),
-    });
-    if (teamRes.ok) {
-      const teams = await teamRes.json() as any[];
-      if (teams.length > 0) return "team";
-    }
+
     return "personal";
   } catch {
     return "personal";
+  }
+}
+
+export async function validateHerokuKey(apiKey: string): Promise<{ valid: boolean; type: "personal" | "team"; teams: string[] }> {
+  try {
+    const [accountRes, teamsRes] = await Promise.all([
+      fetch(`${HEROKU_API_BASE}/account`, { headers: herokuHeaders(apiKey) }),
+      fetch(`${HEROKU_API_BASE}/teams`, { headers: herokuHeaders(apiKey) }),
+    ]);
+
+    const valid = accountRes.ok || teamsRes.ok;
+    let type: "personal" | "team" = "personal";
+    let teams: string[] = [];
+
+    if (teamsRes.ok) {
+      const teamsData = await teamsRes.json() as any[];
+      if (Array.isArray(teamsData) && teamsData.length > 0) {
+        type = "team";
+        teams = teamsData.map((t: any) => t.name || t.id).filter(Boolean);
+      }
+    }
+
+    return { valid, type, teams };
+  } catch {
+    return { valid: false, type: "personal", teams: [] };
   }
 }
 

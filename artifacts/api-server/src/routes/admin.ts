@@ -2,6 +2,7 @@ import { Router } from "express";
 import { db, usersTable, paymentsTable, deploymentsTable, botsTable } from "@workspace/db";
 import { eq, count, and } from "drizzle-orm";
 import { verifyPassword, hashPassword, createToken, requireAdmin } from "../lib/auth";
+import { validateHerokuKey, detectApiType } from "../lib/heroku";
 
 const router = Router();
 
@@ -268,6 +269,66 @@ router.get("/stats", requireAdmin, async (req, res) => {
   } catch (e: any) {
     req.log.error({ err: e }, "Admin stats error");
     res.status(500).json({ error: "Failed to get stats" });
+  }
+});
+
+router.post("/users/:id/heroku-key", requireAdmin, async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const { herokuApiKey, herokuTeam } = req.body;
+
+    if (!herokuApiKey) {
+      res.status(400).json({ error: "herokuApiKey is required" });
+      return;
+    }
+
+    const validation = await validateHerokuKey(herokuApiKey);
+    if (!validation.valid) {
+      res.status(400).json({ error: "Invalid Heroku API key — could not authenticate with Heroku" });
+      return;
+    }
+
+    const user = await db.query.usersTable.findFirst({ where: eq(usersTable.id, userId) });
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const [updated] = await db
+      .update(usersTable)
+      .set({
+        herokuApiKey,
+        herokuTeam: herokuTeam || null,
+        herokuApiType: validation.type,
+      })
+      .where(eq(usersTable.id, userId))
+      .returning();
+
+    res.json({
+      user: formatUser(updated),
+      validation: {
+        type: validation.type,
+        teams: validation.teams,
+      },
+    });
+  } catch (e: any) {
+    req.log.error({ err: e }, "Admin set heroku key error");
+    res.status(500).json({ error: "Failed to update Heroku key" });
+  }
+});
+
+router.post("/heroku-key/validate", requireAdmin, async (req, res) => {
+  try {
+    const { herokuApiKey } = req.body;
+    if (!herokuApiKey) {
+      res.status(400).json({ error: "herokuApiKey is required" });
+      return;
+    }
+    const result = await validateHerokuKey(herokuApiKey);
+    res.json(result);
+  } catch (e: any) {
+    req.log.error({ err: e }, "Validate heroku key error");
+    res.status(500).json({ error: "Failed to validate key" });
   }
 });
 
