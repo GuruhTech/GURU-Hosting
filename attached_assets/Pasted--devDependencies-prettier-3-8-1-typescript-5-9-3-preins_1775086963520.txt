@@ -1,0 +1,45 @@
+
+devDependencies:
++ prettier 3.8.1
++ typescript 5.9.3
+. preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+. preinstall: Done
+Done in 12.6s using pnpm v10.28.0
+Running "pnpm run build"
+> workspace@0.0.0 build /vercel/path0
+> pnpm run typecheck && pnpm -r --if-present --filter '!./artifacts/mockup-sandbox' run build
+> workspace@0.0.0 typecheck /vercel/path0
+> pnpm run typecheck:libs && pnpm -r --filter "./artifacts/**" --filter "./scripts" --if-present run typecheck
+> workspace@0.0.0 typecheck:libs /vercel/path0
+> tsc --build
+Scope: 4 of 9 workspace projects
+artifacts/api-server typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/guru-host typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/api-server typecheck: Done
+artifacts/mockup-sandbox typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/guru-host typecheck: Done
+scripts typecheck$ tsc -p tsconfig.json --noEmit
+scripts typecheck: Done
+artifacts/mockup-sandbox typecheck: Done
+Scope: 7 of 9 workspace projects
+artifacts/api-server build$ node ./build.mjs
+artifacts/guru-host build$ vite build --config vite.config.ts
+artifacts/guru-host build: vite v7.3.1 building client environment for production...
+artifacts/guru-host build: transforming...
+artifacts/api-server build:   dist/index.mjs                       2.4mb ⚠️
+artifacts/api-server build:   dist/pino-worker.mjs               153.4kb
+artifacts/api-server build:   dist/pino-file.mjs                 142.0kb
+artifacts/api-server build:   dist/pino-pretty.mjs               114.6kb
+artifacts/api-server build:   dist/thread-stream-worker.mjs        7.3kb
+artifacts/api-server build:   dist/index.mjs.map                   4.1mb
+artifacts/api-server build:   dist/pino-worker.mjs.map           256.9kb
+artifacts/api-server build:   dist/pino-file.mjs.map             229.0kb
+artifacts/api-server build:   dist/pino-pretty.mjs.map           203.9kb
+artifacts/api-server build:   dist/thread-stream-worker.mjs.map   12.0kb
+artifacts/api-server build: ⚡ Done in 815ms
+artifacts/api-server build: Done
+artifacts/guru-host build: src/components/ui/tooltip.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+artifacts/guru-host build: src/components/ui/select.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+artifacts/guru-host build: src/components/ui/label.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+artifacts/guru-host build: ✓ 2258 modules transformed.
+artifacts/guru-host build: rendering chunks...
