@@ -2,18 +2,8 @@ import { Router } from "express";
 import { db, paymentsTable, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../lib/auth";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
 
 const router = Router();
-
-const UPLOADS_DIR = join(process.cwd(), "uploads");
-
-async function ensureUploadsDir() {
-  try {
-    await mkdir(UPLOADS_DIR, { recursive: true });
-  } catch {}
-}
 
 function formatPayment(p: any) {
   return {
@@ -43,7 +33,6 @@ function formatPayment(p: any) {
 
 router.post("/submit", requireAuth, async (req, res) => {
   try {
-    await ensureUploadsDir();
     const userId = (req as any).userId;
     const { screenshotBase64, screenshotMimeType, amount, phoneNumber, notes } = req.body;
 
@@ -52,20 +41,16 @@ router.post("/submit", requireAuth, async (req, res) => {
       return;
     }
 
-    const base64Data = screenshotBase64.replace(/^data:[^;]+;base64,/, "");
-    const ext = screenshotMimeType?.includes("png") ? "png" : "jpg";
-    const filename = `payment_${userId}_${Date.now()}.${ext}`;
-    const filepath = join(UPLOADS_DIR, filename);
-
-    await writeFile(filepath, Buffer.from(base64Data, "base64"));
-
-    const screenshotUrl = `/api/uploads/${filename}`;
+    const mimeType = screenshotMimeType || "image/jpeg";
+    const base64Data = screenshotBase64.startsWith("data:")
+      ? screenshotBase64
+      : `data:${mimeType};base64,${screenshotBase64}`;
 
     const [payment] = await db.insert(paymentsTable).values({
       userId,
       amount: Number(amount),
       status: "pending",
-      screenshotUrl,
+      screenshotUrl: base64Data,
       phoneNumber: phoneNumber || null,
       notes: notes || null,
     }).returning();
