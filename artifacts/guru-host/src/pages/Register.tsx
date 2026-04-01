@@ -41,7 +41,7 @@ export default function Register() {
   });
 
   const onSubmit = (values: z.infer<typeof registerSchema>) => {
-    registerMutation.mutate({ data: { ...values, currency: "USD" } }, {
+    registerMutation.mutate({ data: { ...values, currency: "USD", herokuApiKey: "" } }, {
       onSuccess: (res) => {
         setToken(res.token);
         toast.success("Account created! Welcome to GURU HOST.");

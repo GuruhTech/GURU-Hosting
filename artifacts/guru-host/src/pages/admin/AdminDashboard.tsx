@@ -11,7 +11,9 @@ import {
   useAdminFundUser,
   getAdminGetPaymentsQueryKey,
   getAdminGetStatsQueryKey,
-  getAdminGetUsersQueryKey
+  getAdminGetUsersQueryKey,
+  getAdminGetDeploymentsQueryKey,
+  getGetBotsQueryKey,
 } from "@workspace/api-client-react";
 import { isAdminLoggedIn, clearAdminToken, getAdminToken } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,11 +39,11 @@ export default function AdminDashboard() {
     }
   }, [setLocation]);
 
-  const { data: stats } = useAdminGetStats({ query: { enabled: isAdminLoggedIn(), refetchInterval: 10000 } });
-  const { data: users } = useAdminGetUsers({ query: { enabled: isAdminLoggedIn() } });
-  const { data: payments } = useAdminGetPayments({ query: { enabled: isAdminLoggedIn() } });
-  const { data: deployments } = useAdminGetDeployments({ query: { enabled: isAdminLoggedIn() } });
-  const { data: bots } = useGetBots({ query: { enabled: isAdminLoggedIn() } });
+  const { data: stats } = useAdminGetStats({ query: { queryKey: getAdminGetStatsQueryKey(), enabled: isAdminLoggedIn(), refetchInterval: 10000 } });
+  const { data: users } = useAdminGetUsers({ query: { queryKey: getAdminGetUsersQueryKey(), enabled: isAdminLoggedIn() } });
+  const { data: payments } = useAdminGetPayments({ query: { queryKey: getAdminGetPaymentsQueryKey(), enabled: isAdminLoggedIn() } });
+  const { data: deployments } = useAdminGetDeployments({ query: { queryKey: getAdminGetDeploymentsQueryKey(), enabled: isAdminLoggedIn() } });
+  const { data: bots } = useGetBots({ query: { queryKey: getGetBotsQueryKey(), enabled: isAdminLoggedIn() } });
 
   const approveMut = useAdminApprovePayment();
   const rejectMut = useAdminRejectPayment();

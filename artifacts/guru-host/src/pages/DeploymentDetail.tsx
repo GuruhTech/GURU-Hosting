@@ -9,7 +9,9 @@ import {
   usePauseDeployment,
   useResumeDeployment,
   useDeleteDeployment,
-  getGetDeploymentQueryKey
+  getGetDeploymentQueryKey,
+  getGetDeploymentLogsQueryKey,
+  getGetDeploymentEnvQueryKey,
 } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -27,20 +29,25 @@ export default function DeploymentDetail() {
 
   const { data: deployment, isLoading } = useGetDeployment(id || "", {
     query: {
+      queryKey: getGetDeploymentQueryKey(id || ""),
       enabled: !!id,
-      refetchInterval: 5000, // Poll status
+      refetchInterval: 5000,
     }
   });
 
   const { data: logsData } = useGetDeploymentLogs(id || "", { lines: 100 }, {
     query: {
+      queryKey: getGetDeploymentLogsQueryKey(id || "", { lines: 100 }),
       enabled: !!id && deployment?.status !== 'deleted',
       refetchInterval: 3000,
     }
   });
 
   const { data: envVars, isLoading: isEnvLoading } = useGetDeploymentEnv(id || "", {
-    query: { enabled: !!id }
+    query: {
+      queryKey: getGetDeploymentEnvQueryKey(id || ""),
+      enabled: !!id,
+    }
   });
 
   const restartMut = useRestartDeployment();

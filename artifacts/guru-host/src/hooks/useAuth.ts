@@ -6,6 +6,7 @@ export function useAuth() {
   const queryClient = useQueryClient();
   const { data: user, isLoading, error } = useGetMe({
     query: {
+      queryKey: getGetMeQueryKey(),
       retry: false,
       staleTime: 5 * 60 * 1000,
     }

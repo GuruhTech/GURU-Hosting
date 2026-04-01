@@ -82,8 +82,8 @@ export default function Payments() {
         setFilePreview(null);
         queryClient.invalidateQueries({ queryKey: getGetPaymentHistoryQueryKey() });
       },
-      onError: (err) => {
-        toast.error(err.data?.error || "Failed to submit payment");
+      onError: (err: any) => {
+        toast.error(err?.data?.error || "Failed to submit payment");
       }
     });
   };

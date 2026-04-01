@@ -10,7 +10,6 @@ import {
   restartHerokuApp,
   scaleHerokuDynos,
   deleteHerokuApp,
-  getHerokuAppStatus,
   buildFromGitHub,
 } from "../lib/heroku";
 import { randomUUID } from "crypto";
@@ -144,9 +143,10 @@ router.post("/", requireAuth, async (req, res) => {
 
 router.get("/:id", requireAuth, async (req, res) => {
   try {
+    const id = req.params.id as string;
     const userId = (req as any).userId;
     const dep = await db.query.deploymentsTable.findFirst({
-      where: and(eq(deploymentsTable.id, req.params.id), eq(deploymentsTable.userId, userId)),
+      where: and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, userId)),
       with: { bot: true },
     });
     if (!dep) {
@@ -162,9 +162,10 @@ router.get("/:id", requireAuth, async (req, res) => {
 
 router.delete("/:id", requireAuth, async (req, res) => {
   try {
+    const id = req.params.id as string;
     const userId = (req as any).userId;
     const dep = await db.query.deploymentsTable.findFirst({
-      where: and(eq(deploymentsTable.id, req.params.id), eq(deploymentsTable.userId, userId)),
+      where: and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, userId)),
     });
     if (!dep) {
       res.status(404).json({ error: "Deployment not found" });
@@ -174,7 +175,7 @@ router.delete("/:id", requireAuth, async (req, res) => {
     if (user && dep.appName) {
       await deleteHerokuApp(user.herokuApiKey, dep.appName);
     }
-    await db.update(deploymentsTable).set({ status: "deleted", updatedAt: new Date() }).where(eq(deploymentsTable.id, req.params.id));
+    await db.update(deploymentsTable).set({ status: "deleted", updatedAt: new Date() }).where(eq(deploymentsTable.id, id));
     res.json({ success: true, message: "Deployment deleted" });
   } catch (e: any) {
     req.log.error({ err: e }, "Delete deployment error");
@@ -184,9 +185,10 @@ router.delete("/:id", requireAuth, async (req, res) => {
 
 router.post("/:id/restart", requireAuth, async (req, res) => {
   try {
+    const id = req.params.id as string;
     const userId = (req as any).userId;
     const dep = await db.query.deploymentsTable.findFirst({
-      where: and(eq(deploymentsTable.id, req.params.id), eq(deploymentsTable.userId, userId)),
+      where: and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, userId)),
       with: { bot: true },
     });
     if (!dep) {
@@ -197,8 +199,8 @@ router.post("/:id/restart", requireAuth, async (req, res) => {
     if (user && dep.appName) {
       await restartHerokuApp(user.herokuApiKey, dep.appName);
     }
-    await db.update(deploymentsTable).set({ status: "running", updatedAt: new Date() }).where(eq(deploymentsTable.id, req.params.id));
-    const updated = await db.query.deploymentsTable.findFirst({ where: eq(deploymentsTable.id, req.params.id), with: { bot: true } });
+    await db.update(deploymentsTable).set({ status: "running", updatedAt: new Date() }).where(eq(deploymentsTable.id, id));
+    const updated = await db.query.deploymentsTable.findFirst({ where: eq(deploymentsTable.id, id), with: { bot: true } });
     res.json(formatDeployment(updated!, (updated as any)?.bot));
   } catch (e: any) {
     req.log.error({ err: e }, "Restart deployment error");
@@ -208,9 +210,10 @@ router.post("/:id/restart", requireAuth, async (req, res) => {
 
 router.post("/:id/pause", requireAuth, async (req, res) => {
   try {
+    const id = req.params.id as string;
     const userId = (req as any).userId;
     const dep = await db.query.deploymentsTable.findFirst({
-      where: and(eq(deploymentsTable.id, req.params.id), eq(deploymentsTable.userId, userId)),
+      where: and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, userId)),
       with: { bot: true },
     });
     if (!dep) {
@@ -221,8 +224,8 @@ router.post("/:id/pause", requireAuth, async (req, res) => {
     if (user && dep.appName) {
       await scaleHerokuDynos(user.herokuApiKey, dep.appName, 0);
     }
-    await db.update(deploymentsTable).set({ status: "paused", updatedAt: new Date() }).where(eq(deploymentsTable.id, req.params.id));
-    const updated = await db.query.deploymentsTable.findFirst({ where: eq(deploymentsTable.id, req.params.id), with: { bot: true } });
+    await db.update(deploymentsTable).set({ status: "paused", updatedAt: new Date() }).where(eq(deploymentsTable.id, id));
+    const updated = await db.query.deploymentsTable.findFirst({ where: eq(deploymentsTable.id, id), with: { bot: true } });
     res.json(formatDeployment(updated!, (updated as any)?.bot));
   } catch (e: any) {
     req.log.error({ err: e }, "Pause deployment error");
@@ -232,9 +235,10 @@ router.post("/:id/pause", requireAuth, async (req, res) => {
 
 router.post("/:id/resume", requireAuth, async (req, res) => {
   try {
+    const id = req.params.id as string;
     const userId = (req as any).userId;
     const dep = await db.query.deploymentsTable.findFirst({
-      where: and(eq(deploymentsTable.id, req.params.id), eq(deploymentsTable.userId, userId)),
+      where: and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, userId)),
       with: { bot: true },
     });
     if (!dep) {
@@ -245,8 +249,8 @@ router.post("/:id/resume", requireAuth, async (req, res) => {
     if (user && dep.appName) {
       await scaleHerokuDynos(user.herokuApiKey, dep.appName, 1);
     }
-    await db.update(deploymentsTable).set({ status: "running", updatedAt: new Date() }).where(eq(deploymentsTable.id, req.params.id));
-    const updated = await db.query.deploymentsTable.findFirst({ where: eq(deploymentsTable.id, req.params.id), with: { bot: true } });
+    await db.update(deploymentsTable).set({ status: "running", updatedAt: new Date() }).where(eq(deploymentsTable.id, id));
+    const updated = await db.query.deploymentsTable.findFirst({ where: eq(deploymentsTable.id, id), with: { bot: true } });
     res.json(formatDeployment(updated!, (updated as any)?.bot));
   } catch (e: any) {
     req.log.error({ err: e }, "Resume deployment error");
@@ -256,9 +260,10 @@ router.post("/:id/resume", requireAuth, async (req, res) => {
 
 router.get("/:id/logs", requireAuth, async (req, res) => {
   try {
+    const id = req.params.id as string;
     const userId = (req as any).userId;
     const dep = await db.query.deploymentsTable.findFirst({
-      where: and(eq(deploymentsTable.id, req.params.id), eq(deploymentsTable.userId, userId)),
+      where: and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, userId)),
     });
     if (!dep) {
       res.status(404).json({ error: "Deployment not found" });
@@ -280,9 +285,10 @@ router.get("/:id/logs", requireAuth, async (req, res) => {
 
 router.get("/:id/env", requireAuth, async (req, res) => {
   try {
+    const id = req.params.id as string;
     const userId = (req as any).userId;
     const dep = await db.query.deploymentsTable.findFirst({
-      where: and(eq(deploymentsTable.id, req.params.id), eq(deploymentsTable.userId, userId)),
+      where: and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, userId)),
     });
     if (!dep) {
       res.status(404).json({ error: "Deployment not found" });
@@ -304,9 +310,10 @@ router.get("/:id/env", requireAuth, async (req, res) => {
 
 router.post("/:id/env", requireAuth, async (req, res) => {
   try {
+    const id = req.params.id as string;
     const userId = (req as any).userId;
     const dep = await db.query.deploymentsTable.findFirst({
-      where: and(eq(deploymentsTable.id, req.params.id), eq(deploymentsTable.userId, userId)),
+      where: and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, userId)),
     });
     if (!dep) {
       res.status(404).json({ error: "Deployment not found" });
