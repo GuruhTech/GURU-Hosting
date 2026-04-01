@@ -6,8 +6,8 @@ import { validateHerokuKey, detectApiType } from "../lib/heroku";
 
 const router = Router();
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "guruadmin";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "GuruHost2024!";
+const ADMIN_EMAIL    = process.env.ADMIN_EMAIL    || "akidarajab462@gmail.com";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "@Akidah";
 
 function formatUser(user: any) {
   return {
@@ -79,8 +79,9 @@ function formatBot(bot: any) {
 
 router.post("/login", async (req, res) => {
   try {
-    const { username, password } = req.body;
-    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+    const { email, username, password } = req.body;
+    const identifier = email || username;
+    if (identifier !== ADMIN_EMAIL || password !== ADMIN_PASSWORD) {
       res.status(401).json({ error: "Invalid admin credentials" });
       return;
     }

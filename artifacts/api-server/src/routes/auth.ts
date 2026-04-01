@@ -28,9 +28,9 @@ function formatUser(user: any) {
 
 router.post("/register", async (req, res) => {
   try {
-    const { email, password, name, country, currency, herokuApiKey, herokuTeam } = req.body;
-    if (!email || !password || !name || !country || !currency || !herokuApiKey) {
-      res.status(400).json({ error: "All fields required" });
+    const { email, password, name, country, currency } = req.body;
+    if (!email || !password || !name || !country) {
+      res.status(400).json({ error: "Name, email, password and country are required" });
       return;
     }
 
@@ -40,7 +40,6 @@ router.post("/register", async (req, res) => {
       return;
     }
 
-    const herokuApiType = await detectApiType(herokuApiKey);
     const hashed = await hashPassword(password);
 
     const [user] = await db.insert(usersTable).values({
@@ -48,10 +47,10 @@ router.post("/register", async (req, res) => {
       password: hashed,
       name,
       country,
-      currency,
-      herokuApiKey,
-      herokuTeam: herokuTeam || null,
-      herokuApiType,
+      currency: currency || "USD",
+      herokuApiKey: null,
+      herokuTeam: null,
+      herokuApiType: null,
       gruCredits: 0,
       freeDeploymentUsed: false,
       isAdmin: false,

@@ -12,7 +12,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,18 +19,16 @@ import { toast } from "sonner";
 import { motion } from "framer-motion";
 
 const countries = [
-  "Kenya", "Nigeria", "USA", "UK", "Ghana", 
-  "Uganda", "Tanzania", "South Africa", 
+  "Kenya", "Nigeria", "USA", "UK", "Ghana",
+  "Uganda", "Tanzania", "South Africa",
   "Zimbabwe", "Zambia", "Rwanda", "Ethiopia"
 ];
 
 const registerSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
+  name:     z.string().min(2, "Name must be at least 2 characters"),
+  email:    z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
-  country: z.string().min(1, "Please select a country"),
-  herokuApiKey: z.string().min(10, "Heroku API key is required"),
-  herokuTeam: z.string().optional(),
+  country:  z.string().min(1, "Please select a country"),
 });
 
 export default function Register() {
@@ -40,30 +37,17 @@ export default function Register() {
 
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-      country: "",
-      herokuApiKey: "",
-      herokuTeam: "",
-    },
+    defaultValues: { name: "", email: "", password: "", country: "" },
   });
 
   const onSubmit = (values: z.infer<typeof registerSchema>) => {
-    // Default currency based on country could be mapped, but backend might handle it or we can pass default
-    const data = {
-      ...values,
-      currency: "USD", // fallback
-    };
-
-    registerMutation.mutate({ data }, {
+    registerMutation.mutate({ data: { ...values, currency: "USD" } }, {
       onSuccess: (res) => {
         setToken(res.token);
-        toast.success("Account created successfully! Welcome to GURU HOST.");
+        toast.success("Account created! Welcome to GURU HOST.");
         setLocation("/dashboard");
       },
-      onError: (err) => {
+      onError: (err: any) => {
         toast.error(err.data?.error || "Registration failed");
       }
     });
@@ -71,43 +55,44 @@ export default function Register() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center py-12 px-4">
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.95 }}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-xl p-8 rounded-2xl bg-card border border-border shadow-2xl relative overflow-hidden"
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md p-8 rounded-2xl bg-card border border-border shadow-2xl relative overflow-hidden"
       >
         <div className="absolute top-0 inset-x-0 h-px"
           style={{ background: "linear-gradient(90deg, transparent, hsl(33 75% 55%), hsl(25 70% 65%), transparent)" }} />
-        
+
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Create Account</h1>
-          <p className="text-muted-foreground">Start hosting your bots with GURU HOST</p>
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl mb-4"
+            style={{ background: "rgba(200,115,25,0.15)", border: "1px solid rgba(200,115,25,0.25)" }}>
+            <span className="text-2xl font-black text-gradient-amber">G</span>
+          </div>
+          <h1 className="text-2xl font-bold mb-1">Create Account</h1>
+          <p className="text-muted-foreground text-sm">Start hosting your bots with GURU HOST</p>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="name"
+              <FormField control={form.control} name="name"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Full Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John Doe" {...field} className="bg-background" />
+                      <Input placeholder="John Doe" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="email"
+              <FormField control={form.control} name="email"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="you@example.com" {...field} className="bg-background" />
+                      <Input placeholder="you@example.com" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -115,29 +100,25 @@ export default function Register() {
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="password"
+            <FormField control={form.control} name="password"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} className="bg-background" />
+                    <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="country"
+            <FormField control={form.control} name="country"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Country</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <SelectTrigger className="bg-background">
+                      <SelectTrigger>
                         <SelectValue placeholder="Select a country" />
                       </SelectTrigger>
                     </FormControl>
@@ -152,55 +133,23 @@ export default function Register() {
               )}
             />
 
-            <div className="pt-4 pb-2 border-b border-border mb-4">
-              <h3 className="font-semibold text-lg">Heroku Configuration</h3>
-              <p className="text-sm text-muted-foreground">We use your Heroku account to host the bots.</p>
-            </div>
-
-            <FormField
-              control={form.control}
-              name="herokuApiKey"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Heroku API Key</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="Account settings > API Key" {...field} className="bg-background" />
-                  </FormControl>
-                  <FormDescription>Found in your Heroku Account Settings</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="herokuTeam"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Heroku Team Name (Optional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="my-team-name" {...field} className="bg-background" />
-                  </FormControl>
-                  <FormDescription>If deploying to a team space</FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button 
-              type="submit" 
-              className="w-full h-12 text-lg mt-6 glow-amber-sm hover:glow-amber transition-all font-bold"
+            <Button
+              type="submit"
+              className="w-full h-11 text-base font-bold mt-2 glow-amber-sm hover:glow-amber transition-all"
               disabled={registerMutation.isPending}
             >
-              {registerMutation.isPending ? "Creating Account..." : "Register"}
+              {registerMutation.isPending ? "Creating Account..." : "Create Account →"}
             </Button>
           </form>
         </Form>
 
-        <div className="mt-6 text-center text-sm text-muted-foreground">
+        <p className="mt-5 text-center text-xs text-muted-foreground">
+          After registration, your admin will configure your Heroku API.
+        </p>
+        <div className="mt-4 text-center text-sm text-muted-foreground">
           Already have an account?{" "}
-          <Link href="/login" className="text-primary hover:underline font-medium">
-            Log in here
+          <Link href="/login" className="font-medium hover:underline" style={{ color: "hsl(35 90% 68%)" }}>
+            Log in
           </Link>
         </div>
       </motion.div>

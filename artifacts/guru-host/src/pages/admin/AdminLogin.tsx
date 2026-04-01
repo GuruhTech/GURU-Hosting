@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { ShieldAlert } from "lucide-react";
 
 const adminLoginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
+  email: z.string().email("Valid email required"),
   password: z.string().min(1, "Password is required"),
 });
 
@@ -29,13 +29,13 @@ export default function AdminLogin() {
   const form = useForm<z.infer<typeof adminLoginSchema>>({
     resolver: zodResolver(adminLoginSchema),
     defaultValues: {
-      username: "",
+      email: "",
       password: "",
     },
   });
 
   const onSubmit = (values: z.infer<typeof adminLoginSchema>) => {
-    loginMutation.mutate({ data: values }, {
+    loginMutation.mutate({ data: { username: values.email, password: values.password } }, {
       onSuccess: (res) => {
         setAdminToken(res.token);
         toast.success("Admin access granted");
@@ -65,12 +65,12 @@ export default function AdminLogin() {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="username"
+              name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-muted-foreground">Admin ID</FormLabel>
+                  <FormLabel className="text-muted-foreground">Admin Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="admin" {...field} className="bg-black border-destructive/20 focus-visible:ring-destructive text-destructive font-mono" />
+                    <Input placeholder="admin@example.com" {...field} className="bg-black border-destructive/20 focus-visible:ring-destructive text-destructive font-mono" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
