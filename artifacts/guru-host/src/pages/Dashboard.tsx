@@ -29,7 +29,7 @@ export default function Dashboard() {
             </Button>
           </Link>
           <Link href="/deploy">
-            <Button className="gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)]">
+            <Button className="gap-2 glow-amber-sm hover:glow-amber transition-all">
               <Plus className="w-4 h-4" /> New Deployment
             </Button>
           </Link>
@@ -61,7 +61,7 @@ export default function Dashboard() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground flex justify-between items-center">
                 Total Deployments
-                <Server className="w-4 h-4 text-cyan-400" />
+                <Server className="w-4 h-4 text-primary" />
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -107,7 +107,7 @@ export default function Dashboard() {
             You haven't deployed any bots yet. Browse our catalog or deploy your own custom bot.
           </p>
           <Link href="/bots">
-            <Button size="lg" className="shadow-[0_0_15px_rgba(16,185,129,0.3)]">Browse Bot Catalog</Button>
+            <Button size="lg" className="glow-amber-sm hover:glow-amber transition-all">Browse Bot Catalog</Button>
           </Link>
         </div>
       ) : (
@@ -128,7 +128,7 @@ export default function Dashboard() {
                           {dep.appName}
                         </h3>
                         <div className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider
-                          ${dep.status === 'running' ? 'bg-primary/20 text-primary border border-primary/30 shadow-[0_0_10px_rgba(16,185,129,0.3)]' : 
+                          ${dep.status === 'running' ? 'bg-primary/20 text-primary border border-primary/30 shadow-[0_0_10px_rgba(200,115,25,0.30)]' : 
                             dep.status === 'paused' ? 'bg-yellow-500/20 text-yellow-500 border border-yellow-500/30' :
                             dep.status === 'crashed' ? 'bg-destructive/20 text-destructive border border-destructive/30' :
                             'bg-blue-500/20 text-blue-500 border border-blue-500/30'

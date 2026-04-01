@@ -63,27 +63,24 @@
 :root, .dark {
   --button-outline: rgba(255, 220, 180, 0.10);
   --badge-outline: rgba(255, 220, 180, 0.06);
-
   --opaque-button-border-intensity: 9;
-
   --elevate-1: rgba(255, 200, 150, 0.04);
   --elevate-2: rgba(255, 200, 150, 0.09);
 
   /* Deep warm brown-black base */
   --background: 20 40% 4%;
   --foreground: 30 15% 94%;
-  --border: 25 25% 18%;
-  --input: 22 28% 12%;
+  --border: 25 20% 20%;
+  --input: 22 28% 10%;
   --ring: 33 75% 55%;
 
-  /* Cards intentionally slightly warm brown — glass effect applied below */
   --card: 22 30% 8%;
   --card-foreground: 30 15% 94%;
-  --card-border: 25 25% 18%;
+  --card-border: 25 20% 20%;
 
   --sidebar: 20 40% 3%;
   --sidebar-foreground: 30 15% 94%;
-  --sidebar-border: 25 25% 18%;
+  --sidebar-border: 25 20% 18%;
   --sidebar-primary: 33 75% 55%;
   --sidebar-primary-foreground: 25 60% 10%;
   --sidebar-accent: 22 28% 12%;
@@ -92,7 +89,7 @@
 
   --popover: 22 30% 7%;
   --popover-foreground: 30 15% 94%;
-  --popover-border: 25 25% 18%;
+  --popover-border: 25 20% 20%;
 
   /* Warm amber primary */
   --primary: 33 75% 55%;
@@ -102,7 +99,7 @@
   --secondary-foreground: 30 15% 94%;
 
   --muted: 22 25% 13%;
-  --muted-foreground: 28 12% 55%;
+  --muted-foreground: 28 12% 52%;
 
   --accent: 22 28% 14%;
   --accent-foreground: 30 15% 94%;
@@ -124,124 +121,180 @@
   --destructive-border: hsl(var(--destructive));
 }
 
+/* ─── Global base ──────────────────────────────────────── */
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html, body, #root {
+    min-height: 100vh;
+    background: transparent;
   }
 
   body {
     @apply font-sans antialiased text-foreground;
-    background: #0c0806;
+    background-color: #0c0806;
     background-image:
-      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(120, 60, 15, 0.35) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 50% at 80% 80%, rgba(80, 35, 8, 0.25) 0%, transparent 55%),
-      radial-gradient(ellipse 40% 40% at 50% 50%, rgba(50, 20, 5, 0.20) 0%, transparent 70%);
+      radial-gradient(ellipse 90% 55% at 15% 5%,  rgba(140, 65, 10, 0.40) 0%, transparent 55%),
+      radial-gradient(ellipse 70% 50% at 85% 85%,  rgba(90, 38, 8,  0.30) 0%, transparent 55%),
+      radial-gradient(ellipse 50% 45% at 50% 45%,  rgba(55, 22, 5,  0.22) 0%, transparent 65%);
     background-attachment: fixed;
-    min-height: 100vh;
+    background-size: cover;
+  }
+
+  /* Strip opaque backgrounds from layout wrappers */
+  .min-h-screen,
+  .flex-col.min-h-screen,
+  main {
+    background: transparent !important;
+  }
+
+  /* Strip bg-background from page wrappers */
+  .bg-background {
+    background: transparent !important;
   }
 }
 
-/* ─── Glass card effect ─────────────────────────────────── */
+/* ─── Glass card ───────────────────────────────────────── */
 @layer components {
-  /* Applies to every shadcn Card */
-  [class*="rounded-"] [data-slot="card"],
-  [data-slot="card"],
-  .card-glass {
-    background: rgba(35, 18, 8, 0.40) !important;
-    backdrop-filter: blur(18px) saturate(140%);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-    border: 1px solid rgba(255, 200, 140, 0.10) !important;
+
+  .glass-card {
+    background: rgba(30, 14, 5, 0.42) !important;
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid rgba(255, 195, 120, 0.13) !important;
     box-shadow:
-      0 4px 32px rgba(0, 0, 0, 0.45),
-      0 1px 0 rgba(255, 200, 140, 0.08) inset;
+      0 2px 0 rgba(255, 210, 150, 0.07) inset,
+      0 6px 40px rgba(0, 0, 0, 0.50),
+      0 1px 8px  rgba(0, 0, 0, 0.35);
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
   }
 
-  /* Direct .card class fallback for any unstyled divs */
-  .card {
-    background: rgba(35, 18, 8, 0.40) !important;
-    backdrop-filter: blur(18px) saturate(140%);
-    -webkit-backdrop-filter: blur(18px) saturate(140%);
-    border: 1px solid rgba(255, 200, 140, 0.10) !important;
+  .glass-card:hover {
+    border-color: rgba(255, 195, 120, 0.22) !important;
     box-shadow:
-      0 4px 32px rgba(0, 0, 0, 0.45),
-      0 1px 0 rgba(255, 200, 140, 0.08) inset;
+      0 2px 0 rgba(255, 210, 150, 0.10) inset,
+      0 12px 56px rgba(0, 0, 0, 0.60),
+      0 2px 12px rgba(0, 0, 0, 0.40);
+    transform: translateY(-1px);
   }
 
-  /* Dialog & popover glass */
-  [data-slot="dialog-content"],
-  [role="dialog"] > div,
-  [data-radix-popper-content-wrapper] [role="dialog"] {
-    background: rgba(28, 14, 5, 0.75) !important;
-    backdrop-filter: blur(24px) saturate(140%);
-    -webkit-backdrop-filter: blur(24px) saturate(140%);
-    border: 1px solid rgba(255, 200, 140, 0.12) !important;
+  /* Sections that have semi-transparent stripe backgrounds */
+  .bg-card\/30,
+  .bg-card\/20,
+  .bg-card\/50 {
+    background: rgba(30, 14, 5, 0.22) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  /* ─── Inline feature cards (divs with rounded + bg-card) ── */
+  .rounded-2xl.bg-card,
+  .rounded-xl.bg-card,
+  .rounded-lg.bg-card {
+    background: rgba(30, 14, 5, 0.42) !important;
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border-color: rgba(255, 195, 120, 0.13) !important;
     box-shadow:
-      0 8px 48px rgba(0, 0, 0, 0.65),
-      0 1px 0 rgba(255, 200, 140, 0.10) inset;
+      0 2px 0 rgba(255, 210, 150, 0.07) inset,
+      0 6px 40px rgba(0, 0, 0, 0.50);
+    transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  }
+  .rounded-2xl.bg-card:hover,
+  .rounded-xl.bg-card:hover {
+    border-color: rgba(255, 195, 120, 0.24) !important;
+    transform: translateY(-2px);
+    box-shadow:
+      0 2px 0 rgba(255, 210, 150, 0.10) inset,
+      0 16px 60px rgba(0, 0, 0, 0.60);
   }
 
-  /* Floating nav / header glass */
-  .glass-nav {
-    background: rgba(18, 9, 3, 0.72) !important;
-    backdrop-filter: blur(20px) saturate(130%);
-    -webkit-backdrop-filter: blur(20px) saturate(130%);
-    border-bottom: 1px solid rgba(255, 200, 140, 0.09) !important;
+  /* ─── Navbar / sticky header glass ────────────────────── */
+  .sticky.top-0,
+  [class*="sticky"][class*="top-0"] {
+    background: rgba(14, 7, 2, 0.70) !important;
+    backdrop-filter: blur(22px) saturate(140%);
+    -webkit-backdrop-filter: blur(22px) saturate(140%);
+    border-bottom: 1px solid rgba(255, 195, 120, 0.10) !important;
   }
 
-  /* Table rows subtle tint */
-  tbody tr:nth-child(odd) {
-    background: rgba(255, 200, 140, 0.025);
-  }
-  tbody tr:hover {
-    background: rgba(255, 200, 140, 0.055) !important;
-  }
-
-  /* Inputs glass */
-  input, textarea, select,
-  [data-slot="input"], [data-slot="textarea"] {
-    background: rgba(20, 10, 3, 0.55) !important;
-    border-color: rgba(255, 200, 140, 0.14) !important;
-  }
-  input:focus, textarea:focus,
-  [data-slot="input"]:focus {
-    border-color: rgba(255, 180, 80, 0.45) !important;
-    box-shadow: 0 0 0 3px rgba(200, 120, 30, 0.15) !important;
+  /* ─── Dialog / modal glass ─────────────────────────────── */
+  [role="dialog"] {
+    background: rgba(22, 10, 3, 0.82) !important;
+    backdrop-filter: blur(28px) saturate(140%);
+    -webkit-backdrop-filter: blur(28px) saturate(140%);
+    border: 1px solid rgba(255, 195, 120, 0.14) !important;
+    box-shadow:
+      0 2px 0 rgba(255, 210, 150, 0.08) inset,
+      0 20px 80px rgba(0, 0, 0, 0.70);
   }
 
-  /* Tabs */
+  /* ─── Inputs ───────────────────────────────────────────── */
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea,
+  select {
+    background: rgba(15, 7, 2, 0.60) !important;
+    border-color: rgba(255, 195, 120, 0.16) !important;
+    color: hsl(30 15% 94%) !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  input:focus,
+  textarea:focus {
+    border-color: rgba(220, 150, 50, 0.50) !important;
+    box-shadow: 0 0 0 3px rgba(200, 120, 30, 0.18) !important;
+    outline: none !important;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: rgba(200, 170, 130, 0.45);
+  }
+
+  /* ─── Tabs ─────────────────────────────────────────────── */
   [role="tablist"] {
-    background: rgba(25, 12, 4, 0.50) !important;
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 200, 140, 0.09) !important;
+    background: rgba(20, 9, 3, 0.55) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 195, 120, 0.10) !important;
   }
   [role="tab"][data-state="active"] {
-    background: rgba(180, 100, 30, 0.28) !important;
-    color: hsl(33 90% 75%) !important;
-    box-shadow: 0 0 12px rgba(180, 100, 30, 0.20);
+    background: rgba(170, 90, 20, 0.30) !important;
+    color: hsl(35 90% 78%) !important;
+    box-shadow: 0 0 14px rgba(180, 100, 20, 0.25);
   }
 
-  /* Buttons */
-  [data-slot="button"][data-variant="outline"],
-  button[data-variant="outline"] {
-    background: rgba(255, 200, 140, 0.06) !important;
-    border-color: rgba(255, 200, 140, 0.18) !important;
+  /* ─── Table rows ───────────────────────────────────────── */
+  tbody tr:nth-child(odd) {
+    background: rgba(255, 195, 120, 0.025);
   }
-  [data-slot="button"][data-variant="outline"]:hover {
-    background: rgba(255, 200, 140, 0.12) !important;
+  tbody tr:hover {
+    background: rgba(255, 195, 120, 0.06) !important;
   }
 
-  /* Badge glass tint */
-  [data-slot="badge"] {
+  /* ─── Outline-variant buttons only ────────────────────── */
+  button.border.bg-background {
+    background: rgba(255, 195, 120, 0.06) !important;
+  }
+  button.border.bg-background:hover {
+    background: rgba(255, 195, 120, 0.13) !important;
+  }
+
+  /* ─── Scrollbar ─────────────────────────────────────────── */
+  ::-webkit-scrollbar        { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track  { background: rgba(10, 5, 1, 0.50); }
+  ::-webkit-scrollbar-thumb  { background: rgba(160, 85, 20, 0.45); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(200, 120, 40, 0.65); }
+
+  /* ─── Badge glass tint ──────────────────────────────────── */
+  [class*="Badge"],
+  .badge {
     backdrop-filter: blur(4px);
   }
-
-  /* Scrollbar warm style */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: rgba(15, 7, 2, 0.5); }
-  ::-webkit-scrollbar-thumb { background: rgba(180, 100, 30, 0.4); border-radius: 99px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(200, 130, 50, 0.6); }
 }
 
+/* ─── Utilities ─────────────────────────────────────────── */
 @layer utilities {
   input[type="search"]::-webkit-search-cancel-button {
     @apply hidden;
@@ -252,20 +305,18 @@
     pointer-events: none;
   }
 
-  /* Glow utility for primary elements */
   .glow-amber {
-    box-shadow: 0 0 20px rgba(200, 120, 30, 0.35), 0 0 60px rgba(200, 120, 30, 0.12);
+    box-shadow: 0 0 24px rgba(200, 115, 25, 0.40), 0 0 70px rgba(200, 115, 25, 0.14);
   }
   .glow-amber-sm {
-    box-shadow: 0 0 8px rgba(200, 120, 30, 0.30);
+    box-shadow: 0 0 10px rgba(200, 115, 25, 0.32);
   }
 
-  /* Floating card lift */
-  .float-card {
-    transition: transform 0.25s ease, box-shadow 0.25s ease;
-  }
-  .float-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.55), 0 2px 0 rgba(255, 200, 140, 0.12) inset;
+  /* Gradient text amber */
+  .text-gradient-amber {
+    background: linear-gradient(135deg, hsl(35 90% 68%), hsl(25 80% 85%), hsl(35 90% 68%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
 }

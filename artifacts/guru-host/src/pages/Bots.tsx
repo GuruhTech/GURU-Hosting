@@ -11,7 +11,7 @@ export default function BotsCatalog() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="text-center max-w-2xl mx-auto mb-12">
-        <h1 className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-primary to-cyan-400">
+        <h1 className="text-4xl font-bold mb-4 text-gradient-amber">
           Bot Catalog
         </h1>
         <p className="text-muted-foreground text-lg">
@@ -36,7 +36,7 @@ export default function BotsCatalog() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
             >
-              <Card className="h-full flex flex-col hover:border-primary/50 transition-all hover:shadow-[0_0_30px_rgba(16,185,129,0.15)] group overflow-hidden">
+              <Card className="h-full flex flex-col group overflow-hidden">
                 <div className="h-48 bg-card-border relative p-6 flex flex-col justify-end overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent z-10" />
                   {bot.imageUrl && (
@@ -75,7 +75,7 @@ export default function BotsCatalog() {
                     </Button>
                   </a>
                   <Link href={`/deploy?botId=${bot.id}`} className="w-full">
-                    <Button className="w-full gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                    <Button className="w-full gap-2 glow-amber-sm hover:glow-amber transition-all">
                       Deploy Now <ChevronRight className="w-4 h-4" />
                     </Button>
                   </Link>

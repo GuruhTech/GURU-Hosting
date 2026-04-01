@@ -55,7 +55,8 @@ export default function Login() {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md p-8 rounded-2xl bg-card border border-border shadow-2xl relative overflow-hidden"
       >
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-cyan-500" />
+        <div className="absolute top-0 inset-x-0 h-px"
+          style={{ background: "linear-gradient(90deg, transparent, hsl(33 75% 55%), hsl(25 70% 65%), transparent)" }} />
         
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">Welcome Back</h1>
@@ -92,7 +93,7 @@ export default function Login() {
             />
             <Button 
               type="submit" 
-              className="w-full h-12 text-lg shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] transition-shadow"
+              className="w-full h-12 text-lg font-bold glow-amber-sm hover:glow-amber transition-all"
               disabled={loginMutation.isPending}
             >
               {loginMutation.isPending ? "Logging in..." : "Log In"}

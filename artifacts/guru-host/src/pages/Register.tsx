@@ -76,7 +76,8 @@ export default function Register() {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-xl p-8 rounded-2xl bg-card border border-border shadow-2xl relative overflow-hidden"
       >
-        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-primary to-cyan-500" />
+        <div className="absolute top-0 inset-x-0 h-px"
+          style={{ background: "linear-gradient(90deg, transparent, hsl(33 75% 55%), hsl(25 70% 65%), transparent)" }} />
         
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">Create Account</h1>
@@ -188,7 +189,7 @@ export default function Register() {
 
             <Button 
               type="submit" 
-              className="w-full h-12 text-lg shadow-[0_0_15px_rgba(16,185,129,0.3)] hover:shadow-[0_0_25px_rgba(16,185,129,0.5)] transition-shadow mt-6"
+              className="w-full h-12 text-lg mt-6 glow-amber-sm hover:glow-amber transition-all font-bold"
               disabled={registerMutation.isPending}
             >
               {registerMutation.isPending ? "Creating Account..." : "Register"}
