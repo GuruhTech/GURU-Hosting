@@ -251,9 +251,9 @@ export default function AdminDashboard() {
   };
 
   // ─── Deployment stop ─────────────────────────────────────────────────────
-  const [stopLoading, setStopLoading] = useState<number | null>(null);
+  const [stopLoading, setStopLoading] = useState<string | null>(null);
 
-  const handleStopDeployment = async (depId: number, appName: string) => {
+  const handleStopDeployment = async (depId: string, appName: string) => {
     setStopLoading(depId);
     try {
       await adminFetch(`/api/admin/deployments/${depId}/stop`, { method: "POST" });

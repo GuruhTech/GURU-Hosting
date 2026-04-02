@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, usersTable, paymentsTable, deploymentsTable, botsTable, settingsTable } from "@workspace/db";
-import { eq, count, sum } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 import { createToken, requireAdmin } from "../lib/auth";
 import { validateHerokuKey } from "../lib/heroku";
 
@@ -376,7 +376,7 @@ router.get("/deployments", requireAdmin, async (req, res) => {
 
 router.post("/deployments/:id/stop", requireAdmin, async (req, res) => {
   try {
-    const depId = Number(req.params.id);
+    const depId = String(req.params.id);
     const [updated] = await db.update(deploymentsTable)
       .set({ status: "stopped", updatedAt: new Date() })
       .where(eq(deploymentsTable.id, depId))
