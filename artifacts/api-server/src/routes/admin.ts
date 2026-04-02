@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { db, usersTable, paymentsTable, deploymentsTable, botsTable } from "@workspace/db";
-import { eq, count, and } from "drizzle-orm";
-import { verifyPassword, hashPassword, createToken, requireAdmin } from "../lib/auth";
-import { validateHerokuKey, detectApiType } from "../lib/heroku";
+import { db, usersTable, paymentsTable, deploymentsTable, botsTable, settingsTable } from "@workspace/db";
+import { eq, count, sum } from "drizzle-orm";
+import { createToken, requireAdmin } from "../lib/auth";
+import { validateHerokuKey } from "../lib/heroku";
 
 const router = Router();
 
@@ -20,6 +20,7 @@ function formatUser(user: any) {
     freeDeploymentUsed: user.freeDeploymentUsed,
     herokuApiType: user.herokuApiType,
     isAdmin: user.isAdmin,
+    isBanned: user.isBanned,
     createdAt: user.createdAt.toISOString(),
   };
 }
@@ -29,6 +30,7 @@ function formatPayment(p: any) {
     id: p.id,
     userId: p.userId,
     amount: p.amount,
+    creditAmount: p.creditAmount ?? p.amount,
     status: p.status,
     screenshotUrl: p.screenshotUrl,
     phoneNumber: p.phoneNumber || null,
@@ -77,6 +79,8 @@ function formatBot(bot: any) {
   };
 }
 
+// ─── Auth ─────────────────────────────────────────────────────────────────────
+
 router.post("/login", async (req, res) => {
   try {
     const { email, username, password } = req.body;
@@ -97,6 +101,7 @@ router.post("/login", async (req, res) => {
         freeDeploymentUsed: false,
         herokuApiType: "personal",
         isAdmin: true,
+        isBanned: false,
         createdAt: new Date().toISOString(),
       },
       token,
@@ -106,6 +111,37 @@ router.post("/login", async (req, res) => {
     res.status(500).json({ error: "Admin login failed" });
   }
 });
+
+// ─── Stats ────────────────────────────────────────────────────────────────────
+
+router.get("/stats", requireAdmin, async (req, res) => {
+  try {
+    const [usersCount] = await db.select({ count: count() }).from(usersTable);
+    const [deploymentsCount] = await db.select({ count: count() }).from(deploymentsTable);
+    const [activeCount] = await db.select({ count: count() }).from(deploymentsTable).where(eq(deploymentsTable.status, "running"));
+    const [pendingCount] = await db.select({ count: count() }).from(paymentsTable).where(eq(paymentsTable.status, "pending"));
+    const [botsCount] = await db.select({ count: count() }).from(botsTable).where(eq(botsTable.isActive, true));
+    const [bannedCount] = await db.select({ count: count() }).from(usersTable).where(eq(usersTable.isBanned, true));
+
+    const approvedPayments = await db.query.paymentsTable.findMany({ where: eq(paymentsTable.status, "approved") });
+    const totalRevenue = approvedPayments.reduce((sum, p) => sum + p.amount, 0);
+
+    res.json({
+      totalUsers: Number(usersCount.count),
+      totalDeployments: Number(deploymentsCount.count),
+      activeDeployments: Number(activeCount.count),
+      pendingPayments: Number(pendingCount.count),
+      totalRevenue,
+      botsInCatalog: Number(botsCount.count),
+      bannedUsers: Number(bannedCount.count),
+    });
+  } catch (e: any) {
+    req.log.error({ err: e }, "Admin stats error");
+    res.status(500).json({ error: "Failed to get stats" });
+  }
+});
+
+// ─── Users ────────────────────────────────────────────────────────────────────
 
 router.get("/users", requireAdmin, async (req, res) => {
   try {
@@ -144,6 +180,122 @@ router.post("/users/:id/fund", requireAdmin, async (req, res) => {
   }
 });
 
+router.post("/users/:id/deduct", requireAdmin, async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const { amount } = req.body;
+    if (!amount || amount <= 0) {
+      res.status(400).json({ error: "Valid amount required" });
+      return;
+    }
+    const user = await db.query.usersTable.findFirst({ where: eq(usersTable.id, userId) });
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    const newCredits = Math.max(0, user.gruCredits - Number(amount));
+    const [updated] = await db.update(usersTable)
+      .set({ gruCredits: newCredits })
+      .where(eq(usersTable.id, userId))
+      .returning();
+    res.json(formatUser(updated));
+  } catch (e: any) {
+    req.log.error({ err: e }, "Admin deduct credits error");
+    res.status(500).json({ error: "Failed to deduct credits" });
+  }
+});
+
+router.post("/users/:id/reset-credits", requireAdmin, async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const [updated] = await db.update(usersTable)
+      .set({ gruCredits: 0 })
+      .where(eq(usersTable.id, userId))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    res.json(formatUser(updated));
+  } catch (e: any) {
+    req.log.error({ err: e }, "Admin reset credits error");
+    res.status(500).json({ error: "Failed to reset credits" });
+  }
+});
+
+router.post("/users/:id/ban", requireAdmin, async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const [updated] = await db.update(usersTable)
+      .set({ isBanned: true })
+      .where(eq(usersTable.id, userId))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    res.json(formatUser(updated));
+  } catch (e: any) {
+    req.log.error({ err: e }, "Admin ban user error");
+    res.status(500).json({ error: "Failed to ban user" });
+  }
+});
+
+router.post("/users/:id/unban", requireAdmin, async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const [updated] = await db.update(usersTable)
+      .set({ isBanned: false })
+      .where(eq(usersTable.id, userId))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    res.json(formatUser(updated));
+  } catch (e: any) {
+    req.log.error({ err: e }, "Admin unban user error");
+    res.status(500).json({ error: "Failed to unban user" });
+  }
+});
+
+router.post("/users/:id/heroku-key", requireAdmin, async (req, res) => {
+  try {
+    const userId = Number(req.params.id);
+    const { herokuApiKey, herokuTeam } = req.body;
+
+    if (!herokuApiKey) {
+      res.status(400).json({ error: "herokuApiKey is required" });
+      return;
+    }
+
+    const validation = await validateHerokuKey(herokuApiKey);
+    if (!validation.valid) {
+      res.status(400).json({ error: "Invalid Heroku API key — could not authenticate with Heroku" });
+      return;
+    }
+
+    const user = await db.query.usersTable.findFirst({ where: eq(usersTable.id, userId) });
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    const [updated] = await db.update(usersTable).set({
+      herokuApiKey,
+      herokuTeam: herokuTeam || null,
+      herokuApiType: validation.type,
+    }).where(eq(usersTable.id, userId)).returning();
+
+    res.json({ user: formatUser(updated), validation: { type: validation.type, teams: validation.teams } });
+  } catch (e: any) {
+    req.log.error({ err: e }, "Admin set heroku key error");
+    res.status(500).json({ error: "Failed to update Heroku key" });
+  }
+});
+
+// ─── Payments ─────────────────────────────────────────────────────────────────
+
 router.get("/payments", requireAdmin, async (req, res) => {
   try {
     const payments = await db.query.paymentsTable.findMany({
@@ -160,22 +312,27 @@ router.get("/payments", requireAdmin, async (req, res) => {
 router.post("/payments/:id/approve", requireAdmin, async (req, res) => {
   try {
     const paymentId = Number(req.params.id);
+    const customCredits = req.body?.credits ? Number(req.body.credits) : null;
+
     const payment = await db.query.paymentsTable.findFirst({ where: eq(paymentsTable.id, paymentId) });
     if (!payment) {
       res.status(404).json({ error: "Payment not found" });
       return;
     }
+
     const [updated] = await db.update(paymentsTable)
       .set({ status: "approved", updatedAt: new Date() })
       .where(eq(paymentsTable.id, paymentId))
       .returning();
+
     const user = await db.query.usersTable.findFirst({ where: eq(usersTable.id, payment.userId) });
     if (user) {
-      const gruAmount = payment.amount;
+      const creditsToAdd = customCredits ?? payment.amount;
       await db.update(usersTable)
-        .set({ gruCredits: user.gruCredits + gruAmount })
+        .set({ gruCredits: user.gruCredits + creditsToAdd })
         .where(eq(usersTable.id, payment.userId));
     }
+
     res.json(formatPayment({ ...updated, user: user || undefined }));
   } catch (e: any) {
     req.log.error({ err: e }, "Admin approve payment error");
@@ -202,6 +359,8 @@ router.post("/payments/:id/reject", requireAdmin, async (req, res) => {
   }
 });
 
+// ─── Deployments ──────────────────────────────────────────────────────────────
+
 router.get("/deployments", requireAdmin, async (req, res) => {
   try {
     const deps = await db.query.deploymentsTable.findMany({
@@ -214,6 +373,26 @@ router.get("/deployments", requireAdmin, async (req, res) => {
     res.status(500).json({ error: "Failed to get deployments" });
   }
 });
+
+router.post("/deployments/:id/stop", requireAdmin, async (req, res) => {
+  try {
+    const depId = Number(req.params.id);
+    const [updated] = await db.update(deploymentsTable)
+      .set({ status: "stopped", updatedAt: new Date() })
+      .where(eq(deploymentsTable.id, depId))
+      .returning();
+    if (!updated) {
+      res.status(404).json({ error: "Deployment not found" });
+      return;
+    }
+    res.json(formatDeployment(updated));
+  } catch (e: any) {
+    req.log.error({ err: e }, "Admin stop deployment error");
+    res.status(500).json({ error: "Failed to stop deployment" });
+  }
+});
+
+// ─── Bots ─────────────────────────────────────────────────────────────────────
 
 router.post("/bots", requireAdmin, async (req, res) => {
   try {
@@ -237,6 +416,30 @@ router.post("/bots", requireAdmin, async (req, res) => {
   }
 });
 
+router.put("/bots/:id", requireAdmin, async (req, res) => {
+  try {
+    const botId = Number(req.params.id);
+    const { name, description, repoUrl, imageUrl, features, isActive } = req.body;
+    const updates: any = {};
+    if (name !== undefined) updates.name = name;
+    if (description !== undefined) updates.description = description;
+    if (repoUrl !== undefined) updates.repoUrl = repoUrl;
+    if (imageUrl !== undefined) updates.imageUrl = imageUrl || null;
+    if (features !== undefined) updates.features = features;
+    if (isActive !== undefined) updates.isActive = isActive;
+
+    const [bot] = await db.update(botsTable).set(updates).where(eq(botsTable.id, botId)).returning();
+    if (!bot) {
+      res.status(404).json({ error: "Bot not found" });
+      return;
+    }
+    res.json(formatBot(bot));
+  } catch (e: any) {
+    req.log.error({ err: e }, "Admin update bot error");
+    res.status(500).json({ error: "Failed to update bot" });
+  }
+});
+
 router.delete("/bots/:id", requireAdmin, async (req, res) => {
   try {
     const botId = Number(req.params.id);
@@ -248,75 +451,68 @@ router.delete("/bots/:id", requireAdmin, async (req, res) => {
   }
 });
 
-router.get("/stats", requireAdmin, async (req, res) => {
+// ─── Platform Settings ────────────────────────────────────────────────────────
+
+router.get("/settings", requireAdmin, async (req, res) => {
   try {
-    const [usersCount] = await db.select({ count: count() }).from(usersTable);
-    const [deploymentsCount] = await db.select({ count: count() }).from(deploymentsTable);
-    const [activeCount] = await db.select({ count: count() }).from(deploymentsTable).where(eq(deploymentsTable.status, "running"));
-    const [pendingCount] = await db.select({ count: count() }).from(paymentsTable).where(eq(paymentsTable.status, "pending"));
-    const [botsCount] = await db.select({ count: count() }).from(botsTable).where(eq(botsTable.isActive, true));
-
-    const approvedPayments = await db.query.paymentsTable.findMany({ where: eq(paymentsTable.status, "approved") });
-    const totalRevenue = approvedPayments.reduce((sum, p) => sum + p.amount, 0);
-
-    res.json({
-      totalUsers: Number(usersCount.count),
-      totalDeployments: Number(deploymentsCount.count),
-      activeDeployments: Number(activeCount.count),
-      pendingPayments: Number(pendingCount.count),
-      totalRevenue,
-      botsInCatalog: Number(botsCount.count),
-    });
+    const rows = await db.select().from(settingsTable);
+    const settings: Record<string, string> = {};
+    for (const row of rows) {
+      settings[row.key] = row.value;
+    }
+    res.json(settings);
   } catch (e: any) {
-    req.log.error({ err: e }, "Admin stats error");
-    res.status(500).json({ error: "Failed to get stats" });
+    req.log.error({ err: e }, "Admin get settings error");
+    res.status(500).json({ error: "Failed to get settings" });
   }
 });
 
-router.post("/users/:id/heroku-key", requireAdmin, async (req, res) => {
+router.post("/settings", requireAdmin, async (req, res) => {
   try {
-    const userId = Number(req.params.id);
-    const { herokuApiKey, herokuTeam } = req.body;
+    const { key, value } = req.body;
+    if (!key || value === undefined) {
+      res.status(400).json({ error: "key and value are required" });
+      return;
+    }
+    await db.insert(settingsTable)
+      .values({ key, value, updatedAt: new Date() })
+      .onConflictDoUpdate({ target: settingsTable.key, set: { value, updatedAt: new Date() } });
+    res.json({ success: true, key, value });
+  } catch (e: any) {
+    req.log.error({ err: e }, "Admin update setting error");
+    res.status(500).json({ error: "Failed to update setting" });
+  }
+});
 
+router.post("/settings/heroku-key", requireAdmin, async (req, res) => {
+  try {
+    const { herokuApiKey, herokuTeam } = req.body;
     if (!herokuApiKey) {
       res.status(400).json({ error: "herokuApiKey is required" });
       return;
     }
-
     const validation = await validateHerokuKey(herokuApiKey);
     if (!validation.valid) {
-      res.status(400).json({ error: "Invalid Heroku API key — could not authenticate with Heroku" });
+      res.status(400).json({ error: "Invalid Heroku API key" });
       return;
     }
-
-    const user = await db.query.usersTable.findFirst({ where: eq(usersTable.id, userId) });
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
+    await db.insert(settingsTable).values({ key: "platform_heroku_key", value: herokuApiKey, updatedAt: new Date() })
+      .onConflictDoUpdate({ target: settingsTable.key, set: { value: herokuApiKey, updatedAt: new Date() } });
+    if (herokuTeam) {
+      await db.insert(settingsTable).values({ key: "platform_heroku_team", value: herokuTeam, updatedAt: new Date() })
+        .onConflictDoUpdate({ target: settingsTable.key, set: { value: herokuTeam, updatedAt: new Date() } });
     }
+    await db.insert(settingsTable).values({ key: "platform_heroku_type", value: validation.type, updatedAt: new Date() })
+      .onConflictDoUpdate({ target: settingsTable.key, set: { value: validation.type, updatedAt: new Date() } });
 
-    const [updated] = await db
-      .update(usersTable)
-      .set({
-        herokuApiKey,
-        herokuTeam: herokuTeam || null,
-        herokuApiType: validation.type,
-      })
-      .where(eq(usersTable.id, userId))
-      .returning();
-
-    res.json({
-      user: formatUser(updated),
-      validation: {
-        type: validation.type,
-        teams: validation.teams,
-      },
-    });
+    res.json({ success: true, validation: { type: validation.type, teams: validation.teams } });
   } catch (e: any) {
-    req.log.error({ err: e }, "Admin set heroku key error");
-    res.status(500).json({ error: "Failed to update Heroku key" });
+    req.log.error({ err: e }, "Admin set platform heroku key error");
+    res.status(500).json({ error: "Failed to set platform Heroku key" });
   }
 });
+
+// ─── Heroku Key Validate ──────────────────────────────────────────────────────
 
 router.post("/heroku-key/validate", requireAdmin, async (req, res) => {
   try {

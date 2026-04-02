@@ -3,4 +3,5 @@ export * from "./bots";
 export * from "./deployments";
 export * from "./payments";
 export * from "./sessions";
+export * from "./settings";
 export * from "./relations";

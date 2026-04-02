@@ -15,6 +15,7 @@ export const usersTable = pgTable("users", {
   herokuTeam: text("heroku_team"),
   herokuApiType: text("heroku_api_type").notNull().default("personal"),
   isAdmin: boolean("is_admin").notNull().default(false),
+  isBanned: boolean("is_banned").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
