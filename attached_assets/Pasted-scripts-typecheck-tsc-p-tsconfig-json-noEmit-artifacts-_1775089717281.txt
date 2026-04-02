@@ -1,0 +1,31 @@
+scripts typecheck$ tsc -p tsconfig.json --noEmit
+artifacts/mockup-sandbox typecheck: Done
+scripts typecheck: Done
+Scope: 7 of 9 workspace projects
+artifacts/api-server build$ node ./build.mjs
+artifacts/guru-host build$ vite build --config vite.config.ts
+artifacts/api-server build:   dist/index.mjs                       2.4mb ⚠️
+artifacts/api-server build:   dist/pino-worker.mjs               153.4kb
+artifacts/api-server build:   dist/pino-file.mjs                 142.0kb
+artifacts/api-server build:   dist/pino-pretty.mjs               114.6kb
+artifacts/api-server build:   dist/thread-stream-worker.mjs        7.3kb
+artifacts/api-server build:   dist/index.mjs.map                   4.1mb
+artifacts/api-server build:   dist/pino-worker.mjs.map           256.9kb
+artifacts/api-server build:   dist/pino-file.mjs.map             229.0kb
+artifacts/api-server build:   dist/pino-pretty.mjs.map           203.9kb
+artifacts/api-server build:   dist/thread-stream-worker.mjs.map   12.0kb
+artifacts/api-server build: ⚡ Done in 1519ms
+artifacts/api-server build: Done
+artifacts/guru-host build: vite v7.3.1 building client environment for production...
+artifacts/guru-host build: transforming...
+artifacts/guru-host build: src/components/ui/tooltip.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+artifacts/guru-host build: src/components/ui/label.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+artifacts/guru-host build: src/components/ui/select.tsx (2:0): Error when using sourcemap for reporting an error: Can't resolve original location of error.
+artifacts/guru-host build: ✓ 2258 modules transformed.
+artifacts/guru-host build: rendering chunks...
+artifacts/guru-host build: computing gzip size...
+artifacts/guru-host build: dist/public/index.html                   0.73 kB │ gzip:   0.41 kB
+artifacts/guru-host build: dist/public/assets/index-DWfQxoKY.css  120.28 kB │ gzip:  19.44 kB
+artifacts/guru-host build: dist/public/assets/index-haGKZyT6.js   700.50 kB │ gzip: 214.12 kB
+artifacts/guru-host build: 
+Deployment Summary

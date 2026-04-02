@@ -161,32 +161,36 @@ export default function Payments() {
                     )}
                   />
 
-                  <FormItem>
-                    <FormLabel>Payment Screenshot</FormLabel>
-                    <FormControl>
-                      <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-card-border/50 transition-colors cursor-pointer relative">
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
-                          onChange={handleFileChange}
-                        />
-                        {filePreview ? (
-                          <div className="relative">
-                            <img src={filePreview} alt="Preview" className="max-h-32 mx-auto rounded object-contain" />
-                            <div className="mt-2 text-xs text-primary font-medium">Click to change</div>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col items-center">
-                            <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                            <p className="text-sm font-medium">Click to upload screenshot</p>
-                            <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
-                          </div>
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormMessage>{form.formState.errors.screenshotBase64?.message}</FormMessage>
-                  </FormItem>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      Payment Screenshot
+                    </label>
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:bg-card-border/50 transition-colors cursor-pointer relative">
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" 
+                        onChange={handleFileChange}
+                      />
+                      {filePreview ? (
+                        <div className="relative">
+                          <img src={filePreview} alt="Preview" className="max-h-32 mx-auto rounded object-contain" />
+                          <div className="mt-2 text-xs text-primary font-medium">Click to change</div>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center">
+                          <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                          <p className="text-sm font-medium">Click to upload screenshot</p>
+                          <p className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</p>
+                        </div>
+                      )}
+                    </div>
+                    {form.formState.errors.screenshotBase64?.message && (
+                      <p className="text-[0.8rem] font-medium text-destructive">
+                        {form.formState.errors.screenshotBase64.message}
+                      </p>
+                    )}
+                  </div>
 
                   <FormField
                     control={form.control}
